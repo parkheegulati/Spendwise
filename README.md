@@ -24,7 +24,7 @@ SpendWise is a full-stack personal finance application designed to help users tr
 
 ## 🛠️ Tech Stack
 
-### **Frontend (`spendwisewebapp`)**
+### **Frontend**
 - **Framework**: React 18 + Vite
 - **Styling**: Tailwind CSS v4 + Lucide React Icons
 - **Data Visualization**: Recharts (Pie Chart, Line Chart)
@@ -32,7 +32,7 @@ SpendWise is a full-stack personal finance application designed to help users tr
 - **Notifications**: React Hot Toast
 - **Date Handling**: Moment.js
 
-### **Backend (`spendwise`)**
+### **Backend**
 - **Runtime**: Node.js + Express.js (ES Modules)
 - **Database**: SQLite (Zero-config local setup) / MySQL (Sequelize ORM)
 - **Authentication**: JSON Web Tokens (`jsonwebtoken`) + Password Hashing (`bcryptjs`)
