@@ -4,6 +4,7 @@ const CLOUDINARY_CLOUD_NAME = "dhadf5h7j";
 export const API_ENDPOINTS = {
     LOGIN: "/login",
     REGISTER: "/register",
+    RESET_PASSWORD: "/reset-password",
     GET_USER_INFO: "/profile",
     UPDATE_USER_INFO: "/profile",
     GET_ALL_CATEGORIES: "/categories",

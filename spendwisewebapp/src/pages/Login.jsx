@@ -12,19 +12,52 @@ import Header from "../components/Header.jsx";
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
     const [error, setError] = useState(null);
+    const [successMsg, setSuccessMsg] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const { setUser } = useContext(AppContext);
+    const [isResetMode, setIsResetMode] = useState(false);
 
+    const { setUser } = useContext(AppContext);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
+        setError("");
+        setSuccessMsg("");
 
         if (!validateEmail(email)) {
-            setError("Please enter valid email address");
+            setError("Please enter a valid email address");
             setIsLoading(false);
+            return;
+        }
+
+        if (isResetMode) {
+            if (!newPassword.trim()) {
+                setError("Please enter your new password");
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                const response = await axiosConfig.post(API_ENDPOINTS.RESET_PASSWORD, {
+                    email,
+                    newPassword,
+                });
+                setSuccessMsg(response.data.message || "Password updated successfully! Please log in now.");
+                setPassword(newPassword);
+                setNewPassword("");
+                setIsResetMode(false);
+            } catch (err) {
+                if (err.response && err.response.data.message) {
+                    setError(err.response.data.message);
+                } else {
+                    setError("Failed to reset password. Please try again.");
+                }
+            } finally {
+                setIsLoading(false);
+            }
             return;
         }
 
@@ -33,8 +66,6 @@ const Login = () => {
             setIsLoading(false);
             return;
         }
-
-        setError("");
 
         try {
             const response = await axiosConfig.post(API_ENDPOINTS.LOGIN, {
@@ -47,12 +78,12 @@ const Login = () => {
                 setUser(user);
                 navigate("/dashboard");
             }
-        } catch (error) {
-            if (error.response && error.response.data.message) {
-                setError(error.response.data.message);
+        } catch (err) {
+            if (err.response && err.response.data.message) {
+                setError(err.response.data.message);
             } else {
-                console.error('Something went wrong', error);
-                setError(error.message);
+                console.error("Something went wrong", err);
+                setError(err.message);
             }
         } finally {
             setIsLoading(false);
@@ -68,10 +99,12 @@ const Login = () => {
                 <div className="relative z-10 w-full max-w-md px-6">
                     <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-lg shadow-2xl p-8">
                         <h3 className="text-2xl font-semibold text-black text-center mb-2">
-                            Welcome Back
+                            {isResetMode ? "Reset Password" : "Welcome Back"}
                         </h3>
                         <p className="text-sm text-slate-700 text-center mb-8">
-                            Please enter your details to log in to SpendWise
+                            {isResetMode
+                                ? "Enter your email and new password to update your account"
+                                : "Please enter your details to log in to SpendWise"}
                         </p>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -83,13 +116,53 @@ const Login = () => {
                                 type="text"
                             />
 
-                            <Input
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                label="Password"
-                                placeholder="*********"
-                                type="password"
-                            />
+                            {!isResetMode ? (
+                                <>
+                                    <Input
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        label="Password"
+                                        placeholder="*********"
+                                        type="password"
+                                    />
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsResetMode(true);
+                                                setError(null);
+                                                setSuccessMsg(null);
+                                            }}
+                                            className="text-xs text-primary hover:underline font-medium"
+                                        >
+                                            Forgot or want to reset password?
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <Input
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        label="New Password"
+                                        placeholder="Enter new password"
+                                        type="password"
+                                    />
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsResetMode(false);
+                                                setError(null);
+                                                setSuccessMsg(null);
+                                            }}
+                                            className="text-xs text-slate-600 hover:underline"
+                                        >
+                                            Back to Login
+                                        </button>
+                                    </div>
+                                </>
+                            )}
 
                             {error && (
                                 <p className="text-red-800 text-sm text-center bg-red-50 p-2 rounded">
@@ -97,13 +170,21 @@ const Login = () => {
                                 </p>
                             )}
 
+                            {successMsg && (
+                                <p className="text-emerald-800 text-sm text-center bg-emerald-50 p-2 rounded">
+                                    {successMsg}
+                                </p>
+                            )}
+
                             <button disabled={isLoading} className={`btn-primary w-full py-3 text-lg font-medium flex items-center justify-center gap-2 ${isLoading ? 'opacity-60 cursor-not-allowed' : ''}`} type="submit">
                                 {isLoading ? (
                                     <>
                                         <LoaderCircle className="animate-spin w-5 h-5" />
-                                        Logging in...
+                                        {isResetMode ? "Updating Password..." : "Logging in..."}
                                     </>
-                                ) : ("LOGIN")}
+                                ) : (
+                                    isResetMode ? "RESET PASSWORD" : "LOGIN"
+                                )}
                             </button>
 
                             <p className="text-sm text-slate-800 text-center mt-6">
