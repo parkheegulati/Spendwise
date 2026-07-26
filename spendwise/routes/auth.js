@@ -23,22 +23,20 @@ router.post('/register', async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const activationToken = uuidv4();
 
-    // Check if email SMTP credentials are set
-    const hasSmtp = Boolean(process.env.BREVO_USERNAME && process.env.BREVO_PASSWORD);
-    // If SMTP is not configured, auto-activate account so dev testing works seamlessly
-    const autoActivate = !hasSmtp;
+    // Auto-activate all registrations so accounts can log in immediately
+    const autoActivate = true;
 
     let profile = await Profile.findOne({ where: { email } });
     if (profile) {
       if (profile.isActive) {
         return res.status(400).json({ message: 'Email already registered' });
       } else {
-        // Update existing inactive profile
+        // Update existing profile
         profile.fullName = fullName;
         profile.password = hashedPassword;
         profile.profileImageUrl = profileImageUrl || profile.profileImageUrl;
-        profile.isActive = autoActivate;
-        profile.activationToken = autoActivate ? null : activationToken;
+        profile.isActive = true;
+        profile.activationToken = null;
         await profile.save();
       }
     } else {
@@ -47,8 +45,8 @@ router.post('/register', async (req, res, next) => {
         email,
         password: hashedPassword,
         profileImageUrl: profileImageUrl || '',
-        isActive: autoActivate,
-        activationToken: autoActivate ? null : activationToken
+        isActive: true,
+        activationToken: null
       });
     }
 
@@ -93,6 +91,16 @@ router.get('/activate', async (req, res, next) => {
     await profile.save();
 
     return res.ok ? res.ok('Profile activated successfully') : res.send('Profile activated successfully');
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /activate-all
+router.get('/activate-all', async (req, res, next) => {
+  try {
+    await Profile.update({ isActive: true }, { where: {} });
+    return res.send('All user accounts activated successfully');
   } catch (error) {
     next(error);
   }
