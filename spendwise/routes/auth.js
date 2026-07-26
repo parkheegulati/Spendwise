@@ -111,8 +111,14 @@ router.get('/activate-all', async (req, res, next) => {
 router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
 
-    const profile = await Profile.findOne({ where: { email } });
+    const profile = await Profile.findOne({
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('email')),
+        cleanEmail
+      )
+    });
     if (!profile) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
