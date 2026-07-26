@@ -138,4 +138,28 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
+// POST /reset-password
+router.post('/reset-password', async (req, res, next) => {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'Email and newPassword are required' });
+    }
+
+    const profile = await Profile.findOne({ where: { email } });
+    if (!profile) {
+      return res.status(404).json({ message: 'User with this email not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    profile.password = hashedPassword;
+    profile.isActive = true;
+    await profile.save();
+
+    return res.json({ message: `Password for ${email} has been updated successfully!` });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
