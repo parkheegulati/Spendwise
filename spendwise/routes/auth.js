@@ -187,9 +187,10 @@ router.post('/reset-password', async (req, res, next) => {
       return res.json({ message: `New account created & password set for ${cleanEmail}!` });
     }
 
-    profile.password = hashedPassword;
-    profile.isActive = true;
-    await profile.save();
+    await Profile.update(
+      { password: hashedPassword, isActive: true },
+      { where: { id: profile.id } }
+    );
 
     return res.json({ message: `Password for ${cleanEmail} has been updated successfully!` });
   } catch (error) {
