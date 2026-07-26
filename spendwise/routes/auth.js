@@ -132,8 +132,11 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, profile.password);
+    const cleanPassword = password ? String(password).trim() : '';
+
+    const isMatch = await bcrypt.compare(cleanPassword, profile.password) || await bcrypt.compare(password, profile.password);
     if (!isMatch) {
+      console.log('Password mismatch for user:', profile.email);
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
@@ -166,7 +169,8 @@ router.post('/reset-password', async (req, res, next) => {
 
     const cleanEmail = email ? email.trim().toLowerCase() : '';
     const rawEmail = email ? email.trim() : '';
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const cleanNewPassword = String(newPassword).trim();
+    const hashedPassword = await bcrypt.hash(cleanNewPassword, 10);
 
     let profile = await Profile.findOne({ where: { email: rawEmail } });
     if (!profile) {
