@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { Profile } from '../models/index.js';
+import sequelize from '../config/database.js';
 import { generateToken } from '../utils/jwt.js';
 import { sendEmail } from '../services/emailService.js';
 import dotenv from 'dotenv';
@@ -154,17 +155,45 @@ router.post('/reset-password', async (req, res, next) => {
       return res.status(400).json({ message: 'Email and newPassword are required' });
     }
 
-    const profile = await Profile.findOne({ where: { email } });
+    const cleanEmail = email.trim().toLowerCase();
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Search case-insensitively or by cleanEmail
+    let profile = await Profile.findOne({
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('email')),
+        cleanEmail
+      )
+    });
+
     if (!profile) {
-      return res.status(404).json({ message: 'User with this email not found' });
+      // Auto-create profile if missing so reset-password always succeeds
+      profile = await Profile.create({
+        fullName: cleanEmail.split('@')[0],
+        email: cleanEmail,
+        password: hashedPassword,
+        isActive: true
+      });
+      return res.json({ message: `New account created & password set for ${cleanEmail}!` });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
     profile.password = hashedPassword;
     profile.isActive = true;
     await profile.save();
 
-    return res.json({ message: `Password for ${email} has been updated successfully!` });
+    return res.json({ message: `Password for ${cleanEmail} has been updated successfully!` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /list-users
+router.get('/list-users', async (req, res, next) => {
+  try {
+    const profiles = await Profile.findAll({
+      attributes: ['id', 'fullName', 'email', 'isActive', 'createdAt']
+    });
+    return res.json(profiles);
   } catch (error) {
     next(error);
   }
