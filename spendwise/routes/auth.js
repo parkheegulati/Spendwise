@@ -187,8 +187,8 @@ router.post('/reset-password', async (req, res, next) => {
   }
 });
 
-// GET /list-users
-router.get('/list-users', async (req, res, next) => {
+// GET /list-users and /users
+router.get(['/list-users', '/users'], async (req, res, next) => {
   try {
     const profiles = await Profile.findAll({
       attributes: ['id', 'fullName', 'email', 'isActive', 'createdAt']
