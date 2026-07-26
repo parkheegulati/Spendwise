@@ -110,18 +110,12 @@ router.get('/activate-all', async (req, res, next) => {
 // POST /login
 router.post('/login', async (req, res, next) => {
   try {
-    const { email, password } = req.body;
     const cleanEmail = email ? email.trim().toLowerCase() : '';
-    const rawEmail = email ? email.trim() : '';
+    const cleanPassword = password ? String(password).trim() : '';
 
-    let profile = await Profile.findOne({ where: { email: rawEmail } });
-    if (!profile) {
-      profile = await Profile.findOne({ where: { email: cleanEmail } });
-    }
-    if (!profile) {
-      const allProfiles = await Profile.findAll();
-      profile = allProfiles.find(p => p.email && p.email.trim().toLowerCase() === cleanEmail);
-    }
+    const allProfiles = await Profile.findAll();
+    const profile = allProfiles.find(p => p.email && p.email.trim().toLowerCase() === cleanEmail);
+
     if (!profile) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
@@ -168,18 +162,11 @@ router.post('/reset-password', async (req, res, next) => {
     }
 
     const cleanEmail = email ? email.trim().toLowerCase() : '';
-    const rawEmail = email ? email.trim() : '';
     const cleanNewPassword = String(newPassword).trim();
     const hashedPassword = await bcrypt.hash(cleanNewPassword, 10);
 
-    let profile = await Profile.findOne({ where: { email: rawEmail } });
-    if (!profile) {
-      profile = await Profile.findOne({ where: { email: cleanEmail } });
-    }
-    if (!profile) {
-      const allProfiles = await Profile.findAll();
-      profile = allProfiles.find(p => p.email && p.email.trim().toLowerCase() === cleanEmail);
-    }
+    const allProfiles = await Profile.findAll();
+    let profile = allProfiles.find(p => p.email && p.email.trim().toLowerCase() === cleanEmail);
 
     if (!profile) {
       profile = await Profile.create({
