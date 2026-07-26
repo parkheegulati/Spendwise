@@ -1,0 +1,32 @@
+# Environment & Secret files
+.env
+.env.*
+!.env.example
+*.env
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Production builds
+dist/
+**/dist/
+
+# SQLite Database
+*.sqlite
+*.sqlite3
+*.db
+**/database.sqlite
+
+# Logs
+*.log
+logs/
+**/logs/
+
+# OS metadata files
+.DS_Store
+Thumbs.db
+
+# IDE & Editor folders
+.idea/
+.vscode/
