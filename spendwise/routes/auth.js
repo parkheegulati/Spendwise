@@ -164,19 +164,20 @@ router.post('/reset-password', async (req, res, next) => {
       return res.status(400).json({ message: 'Email and newPassword are required' });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const rawEmail = email ? email.trim() : '';
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Search case-insensitively or by cleanEmail
-    let profile = await Profile.findOne({
-      where: sequelize.where(
-        sequelize.fn('LOWER', sequelize.col('email')),
-        cleanEmail
-      )
-    });
+    let profile = await Profile.findOne({ where: { email: rawEmail } });
+    if (!profile) {
+      profile = await Profile.findOne({ where: { email: cleanEmail } });
+    }
+    if (!profile) {
+      const allProfiles = await Profile.findAll();
+      profile = allProfiles.find(p => p.email && p.email.trim().toLowerCase() === cleanEmail);
+    }
 
     if (!profile) {
-      // Auto-create profile if missing so reset-password always succeeds
       profile = await Profile.create({
         fullName: cleanEmail.split('@')[0],
         email: cleanEmail,
