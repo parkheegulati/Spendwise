@@ -1,7 +1,13 @@
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const sqlitePath = path.resolve(__dirname, '../database.sqlite');
 
 const dialect = process.env.DB_DIALECT || 'sqlite';
 
@@ -27,7 +33,7 @@ if (dialect === 'mysql') {
   // Default: SQLite (file-based database, zero installation required)
   sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: './database.sqlite',
+    storage: sqlitePath,
     logging: false,
     define: {
       timestamps: true,

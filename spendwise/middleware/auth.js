@@ -16,7 +16,9 @@ export const authMiddleware = async (req, res, next) => {
   }
 
   try {
-    const profile = await Profile.findOne({ where: { email: decoded.sub } });
+    const cleanSub = decoded.sub ? decoded.sub.trim().toLowerCase() : '';
+    const allProfiles = await Profile.findAll();
+    const profile = allProfiles.find(p => p.email && p.email.trim().toLowerCase() === cleanSub);
     if (!profile) {
       return res.status(401).json({ message: 'User not found' });
     }

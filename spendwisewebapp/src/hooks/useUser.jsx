@@ -9,7 +9,10 @@ export const useUser = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (user) {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            clearUser();
+            navigate("/login");
             return;
         }
 
@@ -22,21 +25,21 @@ export const useUser = () => {
                 if (isMounted && response.data) {
                     setUser(response.data);
                 }
-
-            }catch (error) {
-                console.log("Failed to fetch the user info", error);
-                if (isMounted) {
+            } catch (error) {
+                console.log("Failed to fetch user info", error);
+                // Only redirect to login if unauthorized (token invalid/expired)
+                if (isMounted && error.response?.status === 401) {
                     clearUser();
                     navigate("/login");
                 }
             }
-        }
+        };
 
         fetchUserInfo();
 
         return () => {
             isMounted = false;
-        }
-    }, [user, setUser, clearUser, navigate]);
+        };
+    }, [clearUser, navigate, setUser]);
 
 }

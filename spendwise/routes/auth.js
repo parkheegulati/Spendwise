@@ -110,6 +110,11 @@ router.get('/activate-all', async (req, res, next) => {
 // POST /login
 router.post('/login', async (req, res, next) => {
   try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
     const cleanEmail = email ? email.trim().toLowerCase() : '';
     const cleanPassword = password ? String(password).trim() : '';
 
@@ -126,9 +131,7 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
-    const cleanPassword = password ? String(password).trim() : '';
-
-    const isMatch = await bcrypt.compare(cleanPassword, profile.password) || await bcrypt.compare(password, profile.password);
+    const isMatch = await bcrypt.compare(cleanPassword, profile.password) || await bcrypt.compare(String(password), profile.password);
     if (!isMatch) {
       console.log('Password mismatch for user:', profile.email);
       return res.status(400).json({ message: 'Invalid email or password' });
@@ -140,6 +143,7 @@ router.post('/login', async (req, res, next) => {
       fullName: profile.fullName,
       email: profile.email,
       profileImageUrl: profile.profileImageUrl,
+      currency: profile.currency || 'INR',
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt
     };
