@@ -22,19 +22,24 @@ router.post('/categories', authMiddleware, async (req, res, next) => {
     const { name, icon, type, budget } = req.body;
     const profileId = req.user.id;
 
-    const existing = await Category.findOne({
-      where: { name, profile_id: profileId }
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+
+    const cleanName = name.trim();
+    const existing = await Category.findAll({
+      where: { profile_id: profileId }
     });
 
-    if (existing) {
+    if (existing.some(c => c.name && c.name.trim().toLowerCase() === cleanName.toLowerCase())) {
       return res.status(400).json({ message: 'Category with this name already exists' });
     }
 
     const category = await Category.create({
-      name,
-      icon,
-      type,
-      budget: budget ? parseFloat(budget) : 0,
+      name: cleanName,
+      icon: icon || '',
+      type: type || 'expense',
+      budget: budget && !isNaN(budget) ? parseFloat(budget) : 0,
       profile_id: profileId
     });
 

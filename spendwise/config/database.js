@@ -13,7 +13,24 @@ const dialect = process.env.DB_DIALECT || 'sqlite';
 
 let sequelize;
 
-if (dialect === 'mysql') {
+if (process.env.DATABASE_URL) {
+  const isPostgres = process.env.DATABASE_URL.startsWith('postgres');
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    logging: false,
+    dialectOptions: isPostgres
+      ? {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          }
+        }
+      : {},
+    define: {
+      timestamps: true,
+      freezeTableName: true
+    }
+  });
+} else if (dialect === 'mysql') {
   sequelize = new Sequelize(
     process.env.DB_NAME || 'moneymanager',
     process.env.DB_USER || 'root',
